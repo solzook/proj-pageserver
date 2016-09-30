@@ -17,6 +17,7 @@ import CONFIG    # Configuration options. Create by editing CONFIG.base.py
 import argparse  # Command line options (may override some configuration options)
 import socket    # Basic TCP/IP communication on the internet
 import _thread   # Response computation runs concurrently with main program 
+import codecs    # utf-8 file reading
 
 def listen(portnum):
     """
@@ -73,7 +74,8 @@ STATUS_NOT_IMPLEMENTED = "HTTP/1.0 401 Not Implemented\n\n"
 def respond(sock):
     """
     This server responds only to GET requests (not PUT, POST, or UPDATE).
-    Any valid GET request is answered with an ascii graphic of a cat. 
+    Any valid GET request is served with an error or the appropiate page from the pages file.
+    Only html and css requests are taken. 
     """
     sent = 0
     request = sock.recv(1024)  # We accept only short requests
@@ -82,16 +84,31 @@ def respond(sock):
 
     parts = request.split()
     if len(parts) > 1 and parts[0] == "GET":
-        if ".." in parts[1] or "~" in parts[1]:
+        fpath = "{}".format(parts[1])
+        if any(x in fpath for x in {"~", "//", ".."}):
+            #403 error code status forbidden if there are any ~, .. , or // in fpath 
             transmit(STATUS_FORBIDDEN, sock)
+            transmit("forbidden character(s) found", sock)
+
+        elif not (fpath.endswith("html") or fpath.endswith("css")):
+            #only serve html and css files
+            transmit(STATUS_NOT_FOUND, sock)
+            transmit("forbidden file type", sock)
+
         else:
             try:
-                f = open("pages" + parts[1])
-                transmit(f, sock)
+                f = codecs.open("pages" + parts[1], 'r', "utf-8")
             except:
+                #status not found 404 if the page cannot be found in the pages directory
                 transmit(STATUS_NOT_FOUND, sock)
+                transmit("unknown address", sock)
 
-        #transmit(CAT, sock)
+            else:
+                #status OK 200 page was found and will be sent
+                transmit(STATUS_OK, sock)
+                transmit(f.read(), sock)
+                f.close()
+           
     else:
         transmit(STATUS_NOT_IMPLEMENTED, sock)        
         transmit("\nI don't handle this request: {}\n".format(request), sock)
