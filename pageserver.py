@@ -1,5 +1,5 @@
 """
-  A trivial web server in Python. 
+  trivial web server in Python. 
 
   Based largely on https://docs.python.org/3.4/howto/sockets.html
   This trivial implementation is not robust:  We have omitted decent
@@ -82,8 +82,16 @@ def respond(sock):
 
     parts = request.split()
     if len(parts) > 1 and parts[0] == "GET":
-        transmit(STATUS_OK, sock)
-        transmit(CAT, sock)
+        if ".." in parts[1] or "~" in parts[1]:
+            transmit(STATUS_FORBIDDEN, sock)
+        else:
+            try:
+                f = open("pages" + parts[1])
+                transmit(f, sock)
+            except:
+                transmit(STATUS_NOT_FOUND, sock)
+
+        #transmit(CAT, sock)
     else:
         transmit(STATUS_NOT_IMPLEMENTED, sock)        
         transmit("\nI don't handle this request: {}\n".format(request), sock)
