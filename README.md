@@ -1,6 +1,6 @@
 # README #
 
-A "getting started" project for CIS 322, software engineering 1 at University of Oregon, professor Michal Young.
+A "getting started" project for CIS 322, software engineering 1 at University of Oregon with professor Michal Young.
 Assignment By: Solomon Zook, 9-30-2016
 
 ### What do I need? where will it work? ###
