@@ -1,0 +1,2 @@
+echo "Selecting configuration file ..."
+(cd targets.d; ./choose_config.sh)
